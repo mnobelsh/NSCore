@@ -20,6 +20,12 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 
     // MARK: - GET
+    func test_get_performsGETRequest() {
+        let sut = makeSUT()
+        expectTo(requestWithMethod: .GET, when: {
+            sut.get(from: anyURL()) { _ in }
+        })
+    }
     
     func test_get_deliversSuccessDataOnHTTPURLResponse() {
         let expectedData: Data? = nil
@@ -86,6 +92,12 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     // MARK: - POST
+    func test_post_performsPOSTRequest() {
+        let sut = makeSUT()
+        expectTo(requestWithMethod: .POST, when: {
+            sut.post(anyData(), to: anyURL()) { _ in }
+        })
+    }
     
     func test_postWithBody_deliversSuccessOnHTTPURLResponse() {
         let data = anyHTTPBody()
@@ -133,6 +145,19 @@ private extension URLSessionHTTPClientTests {
         let sut = URLSessionHTTPClient(session: .shared)
         trackForMemoryLeaks(in: sut, file: file, line: line)
         return sut
+    }
+    
+    func expectTo(requestWithMethod method: HTTPMethod, when operation: @escaping() -> Void, file: StaticString = #filePath, line: UInt = #line) {
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        operation()
+        
+        URLProtocolSpy.observeRequest { request in
+            XCTAssertEqual(request.httpMethod, method.rawValue, "Expect to perform request with \(method.rawValue), got \(request.httpMethod!) instead.", file: file, line: line)
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
     }
     
     func resultValueFor(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result? {
