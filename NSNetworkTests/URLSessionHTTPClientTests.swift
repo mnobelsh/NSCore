@@ -20,7 +20,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 
     // MARK: - GET
-    func test_get_performsGETRequest() {
+    func test_get_performsRequestWithHTTPMethodGET() {
         let sut = makeSUT()
         expectTo(requestWithMethod: .GET, when: {
             sut.get(from: anyURL()) { _ in }
@@ -92,7 +92,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     // MARK: - POST
-    func test_post_performsPOSTRequest() {
+    func test_post_performsRequestWithHTTPMethodPOST() {
         let sut = makeSUT()
         expectTo(requestWithMethod: .POST, when: {
             sut.post(anyData(), to: anyURL()) { _ in }
@@ -134,6 +134,14 @@ final class URLSessionHTTPClientTests: XCTestCase {
         URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: anyError())
         
         wait(for: [exp], timeout: 1)
+    }
+    
+    // MARK: - PUT
+    func test_put_performsRequestWithHTTPMethodPUT() {
+        let sut = makeSUT()
+        expectTo(requestWithMethod: .PUT, when: {
+            sut.put(anyData(), to: anyURL()) { _ in }
+        })
     }
 
 }

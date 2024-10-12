@@ -43,11 +43,26 @@ public final class URLSessionHTTPClient: HTTPClient {
         return task
     }
     
+    @discardableResult
+    public func put(_ data: Data, to url: URL, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .PUT, headers: headers, body: data)
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
 }
 
-extension URLSessionHTTPClient {
+// MARK: - URLSessionHTTPClient + Extensions (Private)
+private extension URLSessionHTTPClient {
     
-    private func buildRequest(
+    func buildRequest(
         url: URL,
         method: HTTPMethod,
         headers: [String: Any?]? = nil,
@@ -78,16 +93,4 @@ extension URLSessionHTTPClient {
         }
     }
     
-}
-
-extension URLSessionDataTask: HTTPClientTask {
-    public var id: String { UUID().uuidString }
-    
-    public func cancelTask() {
-        self.cancel()
-    }
-    
-    public func resumeTask() {
-        self.resume()
-    }
 }

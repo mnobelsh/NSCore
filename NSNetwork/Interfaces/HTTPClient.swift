@@ -70,4 +70,6 @@ public protocol HTTPClient: AnyObject {
     /// ```
     @discardableResult
     func post(_ data: Data, to url: URL, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    
+    func put(_ data: Data, to url: URL, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }
