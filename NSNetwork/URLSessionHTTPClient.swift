@@ -16,8 +16,13 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func get(from url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .GET, headers: headers)
+    public func get(
+        from url: HTTPURLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .GET, queryParams: parameters, headers: headers)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
@@ -30,8 +35,14 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func post(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .POST, headers: headers, body: data)
+    public func post(
+        _ data: Data,
+        to url: HTTPURLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .POST, queryParams: parameters, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
@@ -44,8 +55,14 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func put(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .PUT, headers: headers, body: data)
+    public func put(
+        _ data: Data,
+        to url: HTTPURLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .PUT, queryParams: parameters, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
@@ -58,8 +75,14 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func patch(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .PATCH, headers: headers, body: data)
+    public func patch(
+        _ data: Data,
+        to url: HTTPURLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .PATCH, queryParams: parameters, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
@@ -72,8 +95,13 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func delete(from url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .DELETE, headers: headers)
+    public func delete(
+        from url: HTTPURLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .DELETE, queryParams: parameters, headers: headers)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
@@ -93,15 +121,25 @@ private extension URLSessionHTTPClient {
     func buildRequest(
         url: HTTPURLConvertible,
         method: HTTPMethod,
+        queryParams: QueryParameters? = nil,
         headers: [String: Any?]? = nil,
         body: Data? = nil
     ) -> URLRequest {
-        var request = URLRequest(url: url.value)
+        var url = url.value
+        if let queryParams = queryParams {
+            var queryItems = [URLQueryItem]()
+            for (key, value) in queryParams where value != nil {
+                let item = URLQueryItem(name: key, value: String(describing: value!))
+                queryItems.append(item)
+            }
+            url.append(queryItems: queryItems)
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
         request.httpBody = body
         if let headers = headers, !headers.isEmpty {
             for (key, value) in headers where value != nil {
-                request.setValue(String(describing: value), forHTTPHeaderField: key)
+                request.setValue(String(describing: value!), forHTTPHeaderField: key)
             }
         }
         return request

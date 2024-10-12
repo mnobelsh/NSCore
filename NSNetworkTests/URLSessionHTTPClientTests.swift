@@ -54,6 +54,26 @@ final class URLSessionHTTPClientTests: XCTestCase {
         })
     }
     
+    func test_get_performsRequestWithQueryParametersAndHeaders() {
+        let sut = makeSUT()
+        let queryParams: HTTPClient.QueryParameters = ["id":1, "username": "anonymous123", "none": nil]
+        let headers: HTTPClient.Headers = ["id": 1, "name": "anonymous", "height": 170.5, "none": nil]
+        
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        sut.get(from: anyURL(), parameters: queryParams, headers: headers) { _ in }
+        
+        URLProtocolSpy.observeRequest { request in
+            XCTAssertNotNil(request.url?.query())
+            headers.compactMapValues{ $0 }.forEach {
+                XCTAssertNotNil(request.value(forHTTPHeaderField: $0.key))
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+    }
+    
     func test_get_deliversSuccessDataOnHTTPURLResponse() {
         let expectedData: Data? = nil
         let result = resultValueFor(data: expectedData, response: anyHTTPURLResponse(), error: nil)
@@ -63,24 +83,6 @@ final class URLSessionHTTPClientTests: XCTestCase {
         default:
             break
         }
-    }
-    
-    func test_get_performsRequestWithHeaders() {
-        let sut = makeSUT()
-        let headers: [String: Any?] = ["id": 1, "name": "James", "height": 170.5, "optional": nil]
-        
-        let exp = expectation(description: "Waiting for request observer.")
-        
-        sut.get(from: anyURL(), headers: headers) { _ in }
-        
-        URLProtocolSpy.observeRequest { request in
-            headers.compactMapValues{ $0 }.forEach {
-                XCTAssertNotNil(request.value(forHTTPHeaderField: $0.key))
-            }
-            exp.fulfill()
-        }
-        
-        wait(for: [exp], timeout: 1.0)
     }
     
     func test_get_deliversClientErrorOnAllClientErrorStatusCodes() {

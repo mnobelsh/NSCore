@@ -22,6 +22,8 @@ public protocol HTTPClient: AnyObject {
     
     typealias Headers = [String: Any?]
     
+    typealias QueryParameters = [String: Any?]
+    
     /// Sends an asynchronous `GET` request to the specified URL.
     ///
     /// - Parameters:
@@ -44,7 +46,7 @@ public protocol HTTPClient: AnyObject {
     /// }
     ///
     @discardableResult
-    func get(from url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func get(from url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     /// Sends an asynchronous `POST` request to the specified URL with the given data.
     ///
@@ -69,14 +71,14 @@ public protocol HTTPClient: AnyObject {
     /// }
     /// ```
     @discardableResult
-    func post(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func post(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     @discardableResult
-    func put(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func put(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     @discardableResult
-    func patch(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func patch(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     @discardableResult
-    func delete(from url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func delete(from url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }
