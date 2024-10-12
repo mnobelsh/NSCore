@@ -6,7 +6,6 @@
 //  Copyright © 2024 Muhammad Nobel Shidqi. All rights reserved.
 //
 
-
 enum HTTPMethod: String {
     case GET
     case POST

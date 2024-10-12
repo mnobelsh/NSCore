@@ -86,6 +86,43 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     // MARK: - POST
+    
+    func test_postWithBody_deliversSuccessOnHTTPURLResponse() {
+        let data = anyHTTPBody()
+        let exp = expectation(description: "Waiting for post request.")
+        
+        makeSUT().post(data, to: anyURL()) { result in
+            switch result {
+            case .success:
+                break
+            default:
+                XCTFail("Expected to receive success, got \(result) instead.")
+            }
+            exp.fulfill()
+        }
+        
+        URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: nil)
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func test_postWithEmptyBody_deliversFailureOnHTTPURLResponse() {
+        let exp = expectation(description: "Waiting for post request.")
+        
+        makeSUT().post(Data(), to: anyURL()) { result in
+            switch result {
+            case .failure:
+                break
+            default:
+                XCTFail("Expected to receive failure, got \(result) instead.")
+            }
+            exp.fulfill()
+        }
+        
+        URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: anyError())
+        
+        wait(for: [exp], timeout: 1)
+    }
 
 }
 

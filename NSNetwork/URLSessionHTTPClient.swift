@@ -33,8 +33,13 @@ public final class URLSessionHTTPClient: HTTPClient {
     public func post(_ data: Data, to url: URL, headers: [String: Any?]? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
         let request = buildRequest(url: url, method: .POST, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
-            
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
         }
+        task.resume()
         return task
     }
     
