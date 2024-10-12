@@ -44,7 +44,7 @@ public protocol HTTPClient: AnyObject {
     /// }
     ///
     @discardableResult
-    func get(from url: URL, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func get(from url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     /// Sends an asynchronous `POST` request to the specified URL with the given data.
     ///
@@ -69,7 +69,7 @@ public protocol HTTPClient: AnyObject {
     /// }
     /// ```
     @discardableResult
-    func post(_ data: Data, to url: URL, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func post(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
-    func put(_ data: Data, to url: URL, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func put(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }

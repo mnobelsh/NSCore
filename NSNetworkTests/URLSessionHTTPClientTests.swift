@@ -20,6 +20,33 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 
     // MARK: - GET
+    func test_getURLString_performsRequestWithMatchingURL() {
+        let requestedURLString = "any-url-string.com"
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        makeSUT().get(from: requestedURLString) { _ in }
+        
+        URLProtocolSpy.observeRequest { request in
+            XCTAssertEqual(request.url?.absoluteString, requestedURLString)
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func test_getURL_performsRequestWithMatchingURL() {
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        makeSUT().get(from: anyURL()) { _ in }
+        
+        URLProtocolSpy.observeRequest { request in
+            XCTAssertEqual(request.url, anyURL())
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
     func test_get_performsRequestWithHTTPMethodGET() {
         let sut = makeSUT()
         expectTo(requestWithMethod: .GET, when: {

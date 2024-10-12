@@ -16,7 +16,7 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func get(from url: URL, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+    public func get(from url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
         let request = buildRequest(url: url, method: .GET, headers: headers)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
@@ -30,7 +30,7 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func post(_ data: Data, to url: URL, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+    public func post(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
         let request = buildRequest(url: url, method: .POST, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
@@ -44,7 +44,7 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func put(_ data: Data, to url: URL, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+    public func put(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
         let request = buildRequest(url: url, method: .PUT, headers: headers, body: data)
         let task = session.dataTask(with: request) { data, response, error in
             completion(URLSessionHTTPClient.mapResult(
@@ -63,12 +63,12 @@ public final class URLSessionHTTPClient: HTTPClient {
 private extension URLSessionHTTPClient {
     
     func buildRequest(
-        url: URL,
+        url: HTTPURLConvertible,
         method: HTTPMethod,
         headers: [String: Any?]? = nil,
         body: Data? = nil
     ) -> URLRequest {
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: url.value)
         request.httpMethod = method.rawValue
         request.httpBody = body
         if let headers = headers, !headers.isEmpty {
