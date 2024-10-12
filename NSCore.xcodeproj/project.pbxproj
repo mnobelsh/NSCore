@@ -43,6 +43,7 @@
 		FFF341082CB85D3C00861215 /* NSStorageTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NSStorageTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFF341282CB8692800861215 /* NSHelper.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NSHelper.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFF3412F2CB8692800861215 /* NSHelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NSHelperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FFF3418A2CBA97A300861215 /* NSNetwork.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = NSNetwork.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -163,6 +164,7 @@
 		FFF340BE2CB85CDE00861215 = {
 			isa = PBXGroup;
 			children = (
+				FFF3418A2CBA97A300861215 /* NSNetwork.xctestplan */,
 				FFF340E72CB85D1400861215 /* NSNetwork */,
 				FFF340F12CB85D1400861215 /* NSNetworkTests */,
 				FFF341022CB85D3B00861215 /* NSStorage */,
