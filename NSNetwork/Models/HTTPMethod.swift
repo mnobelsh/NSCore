@@ -6,7 +6,14 @@
 //  Copyright © 2024 Muhammad Nobel Shidqi. All rights reserved.
 //
 
+/// An enumeration that defines HTTP request methods.
+///
+/// `HTTPMethod` provides an abstraction over the common HTTP methods such as `GET` and `POST`.
 enum HTTPMethod: String {
+    
+    /// The `GET` method is used to retrieve data from the server.
     case GET
+    
+    /// The `POST` method is used to send data to the server.
     case POST
 }
