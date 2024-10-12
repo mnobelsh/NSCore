@@ -57,6 +57,20 @@ public final class URLSessionHTTPClient: HTTPClient {
         return task
     }
     
+    @discardableResult
+    public func patch(_ data: Data, to url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .PATCH, headers: headers, body: data)
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
 }
 
 // MARK: - URLSessionHTTPClient + Extensions (Private)

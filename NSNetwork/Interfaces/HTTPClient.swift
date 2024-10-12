@@ -71,5 +71,9 @@ public protocol HTTPClient: AnyObject {
     @discardableResult
     func post(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
+    @discardableResult
     func put(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    
+    @discardableResult
+    func patch(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }

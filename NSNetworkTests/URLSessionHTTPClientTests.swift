@@ -170,6 +170,14 @@ final class URLSessionHTTPClientTests: XCTestCase {
             sut.put(anyData(), to: anyURL()) { _ in }
         })
     }
+    
+    // MARK: - PATCH
+    func test_patch_performsRequestWithHTTPMethodPATCH() {
+        let sut = makeSUT()
+        expectTo(requestWithMethod: .PATCH, when: {
+            sut.patch(anyData(), to: anyURL()) { _ in }
+        })
+    }
 
 }
 
