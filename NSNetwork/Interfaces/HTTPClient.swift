@@ -82,3 +82,33 @@ public protocol HTTPClient: AnyObject {
     @discardableResult
     func delete(from url: HTTPURLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }
+
+// MARK: - HTTPClient + Extensions (Use default parameters value)
+public extension HTTPClient {
+    
+    @discardableResult
+    func get(from url: HTTPURLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask {
+        return get(from: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+    @discardableResult
+    func post(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask {
+        return post(data, to: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+    @discardableResult
+    func put(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask {
+        return put(data, to: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+    @discardableResult
+    func patch(_ data: Data, to url: HTTPURLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask {
+        return patch(data, to: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+    @discardableResult
+    func delete(from url: HTTPURLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask {
+        return delete(from: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+}
