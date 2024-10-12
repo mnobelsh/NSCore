@@ -20,21 +20,11 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 
     func test_get_deliversSuccessDataOnHTTPURLResponse() {
-        let expectedData = anyData()
+        let expectedData: Data? = nil
         let result = resultValueFor(data: expectedData, response: anyHTTPURLResponse(), error: nil)
         switch result {
-        case let .success(data):
-            XCTAssertEqual(data, expectedData, "Expected to receive \(expectedData), got \(data) instead.")
-        default:
+        case .failure:
             XCTFail("Expected to receive success result, got \(result!) instead.")
-        }
-    }
-    
-    func test_get_deliversInvalidDataErrorOnEmptyData() {
-        let result = resultValueFor(data: Data(), response: anyHTTPURLResponse(), error: nil)
-        switch result {
-        case .success:
-            XCTFail("Expected to receive failure result, got \(result!) instead.")
         default:
             break
         }

@@ -19,10 +19,22 @@ public final class URLSessionHTTPClient: HTTPClient {
     public func get(from url: URL, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
         let request = buildRequest(url: url, method: .GET)
         let task = session.dataTask(with: request) { data, response, error in
-            if let error = error { return completion(.failure(.unknown(message: error.localizedDescription))) }
-            completion(URLSessionHTTPClient.mapResult(data: data, response: response))
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
         }
         task.resume()
+        return task
+    }
+    
+    @discardableResult
+    public func post(_ data: Data, to url: URL, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .POST, body: data)
+        let task = session.dataTask(with: request) { data, response, error in
+            
+        }
         return task
     }
     
@@ -30,13 +42,25 @@ public final class URLSessionHTTPClient: HTTPClient {
 
 extension URLSessionHTTPClient {
     
-    private func buildRequest(url: URL, method: HTTPMethod) -> URLRequest {
+    private func buildRequest(
+        url: URL,
+        method: HTTPMethod,
+        headers: [String: Any?]? = nil,
+        body: Data? = nil
+    ) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
+        request.httpBody = body
+        if let headers = headers, !headers.isEmpty {
+            for (key, value) in headers where value != nil {
+                request.setValue(String(describing: value), forHTTPHeaderField: key)
+            }
+        }
         return request
     }
     
-    static func mapResult(data: Data?, response: URLResponse?) -> HTTPClient.Result {
+    static func mapResult(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result {
+        if let error = error { return .failure(.unknown(message: error.localizedDescription)) }
         guard let response = response as? HTTPURLResponse else { return .failure(.invalidResponse) }
         let emptyData = Data()
         switch response.statusCode {
@@ -45,11 +69,7 @@ extension URLSessionHTTPClient {
         case 500...599:
             return .failure(.server(data: data == emptyData ? nil : data, code: response.statusCode))
         default:
-            if let data = data, data != emptyData {
-                return .success(data)
-            } else {
-                return .failure(.invalidData)
-            }
+            return .success(data)
         }
     }
     
