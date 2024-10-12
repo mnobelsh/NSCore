@@ -10,8 +10,8 @@ public protocol HTTPClient: AnyObject {
     typealias Result = Swift.Result<Data?, HTTPClientError>
     
     @discardableResult
-    func get(from url: URL, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func get(from url: URL, headers: [String: Any?]?, completion: @escaping (Result) -> Void) -> HTTPClientTask
     
     @discardableResult
-    func post(_ data: Data, to url: URL, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    func post(_ data: Data, to url: URL, headers: [String: Any?]?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }

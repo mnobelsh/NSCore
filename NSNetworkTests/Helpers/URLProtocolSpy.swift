@@ -11,6 +11,7 @@ import Foundation
 class URLProtocolSpy: URLProtocol {
     
     private static var stub: Stub?
+    private static var requestObserver: ((URLRequest) -> Void)?
     
     private struct Stub {
         let data: Data?
@@ -31,6 +32,10 @@ class URLProtocolSpy: URLProtocol {
         stub = Stub(data: data, response: response, error: error)
     }
     
+    static func observeRequest(observer: @escaping (URLRequest) -> Void) {
+        requestObserver = observer
+    }
+    
     override class func canInit(with request: URLRequest) -> Bool {
         return true
     }
@@ -40,6 +45,11 @@ class URLProtocolSpy: URLProtocol {
     }
     
     override func startLoading() {
+        if let observer = URLProtocolSpy.requestObserver {
+            client?.urlProtocolDidFinishLoading(self)
+            return observer(request)
+        }
+        
         guard request.url != nil, let stub = URLProtocolSpy.stub else { return }
         
         if let data = stub.data {

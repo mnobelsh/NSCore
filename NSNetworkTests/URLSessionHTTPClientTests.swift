@@ -19,6 +19,8 @@ final class URLSessionHTTPClientTests: XCTestCase {
         URLProtocolSpy.stopInterceptingRequest()
     }
 
+    // MARK: - GET
+    
     func test_get_deliversSuccessDataOnHTTPURLResponse() {
         let expectedData: Data? = nil
         let result = resultValueFor(data: expectedData, response: anyHTTPURLResponse(), error: nil)
@@ -28,6 +30,24 @@ final class URLSessionHTTPClientTests: XCTestCase {
         default:
             break
         }
+    }
+    
+    func test_get_performsRequestWithHeaders() {
+        let sut = makeSUT()
+        let headers: [String: Any?] = ["id": 1, "name": "James", "height": 170.5, "optional": nil]
+        
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        sut.get(from: anyURL(), headers: headers) { _ in }
+        
+        URLProtocolSpy.observeRequest { request in
+            headers.compactMapValues{ $0 }.forEach {
+                XCTAssertNotNil(request.value(forHTTPHeaderField: $0.key))
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
     }
     
     func test_get_deliversClientErrorOnAllClientErrorStatusCodes() {
@@ -64,12 +84,15 @@ final class URLSessionHTTPClientTests: XCTestCase {
         XCTAssertNotNil(resultErrorFor(resultValueFor(data: anyData(), response: anyURLResponse(), error: nil)))
         XCTAssertNotNil(resultErrorFor(resultValueFor(data: nil, response: anyURLResponse(), error: anyError())))
     }
+    
+    // MARK: - POST
 
 }
 
+// MARK: - URLSessionHTTPClientTests + Extension
 private extension URLSessionHTTPClientTests {
     
-    func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> HTTPClient {
+    func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> URLSessionHTTPClient {
         let sut = URLSessionHTTPClient(session: .shared)
         trackForMemoryLeaks(in: sut, file: file, line: line)
         return sut
