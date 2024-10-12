@@ -20,4 +20,6 @@ public enum HTTPMethod: String {
     case PUT
     
     case PATCH
+    
+    case DELETE
 }

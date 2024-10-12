@@ -76,4 +76,7 @@ public protocol HTTPClient: AnyObject {
     
     @discardableResult
     func patch(_ data: Data, to url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
+    
+    @discardableResult
+    func delete(from url: HTTPURLConvertible, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask
 }

@@ -71,6 +71,20 @@ public final class URLSessionHTTPClient: HTTPClient {
         return task
     }
     
+    @discardableResult
+    public func delete(from url: HTTPURLConvertible, headers: HTTPClient.Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
+        let request = buildRequest(url: url, method: .DELETE, headers: headers)
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
 }
 
 // MARK: - URLSessionHTTPClient + Extensions (Private)

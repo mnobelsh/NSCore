@@ -178,6 +178,14 @@ final class URLSessionHTTPClientTests: XCTestCase {
             sut.patch(anyData(), to: anyURL()) { _ in }
         })
     }
+    
+    // MARK: - DELETE
+    func test_delete_performsRequestWithHTTPMethodDELETE() {
+        let sut = makeSUT()
+        expectTo(requestWithMethod: .DELETE, when: {
+            sut.delete(from: anyURL()) { _ in }
+        })
+    }
 
 }
 
