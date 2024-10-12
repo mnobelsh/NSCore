@@ -21,10 +21,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     // MARK: - GET
     func test_getFromInvalidURL_deliversInvalidURLError() {
-        let requestedURLString = "any com"
+        let invalidURL = "any com"
         let exp = expectation(description: "Waiting for request observer.")
         
-        makeSUT().get(from: requestedURLString) { result in
+        makeSUT().get(from: invalidURL) { result in
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .invalidURL, "Expected to receive invalid url error, got \(result) instead.")

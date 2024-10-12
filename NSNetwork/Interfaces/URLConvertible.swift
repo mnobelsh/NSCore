@@ -23,31 +23,14 @@ public protocol URLConvertible: Sendable {
 }
 
 // MARK: - URLConvertible + Implementations
-
-/// Extends `String` to conform to `URLConvertible`.
-///
-/// This implementation attempts to convert the `String` into a `URL`. If the string does not represent a valid URL,
-/// the `asURL` property will return `nil`.
 extension String: URLConvertible {
-    
-    /// Converts the string into a `URL`.
-    ///
-    /// - Returns: A `URL` if the string is a valid URL, otherwise `nil`.
-    public var asURL: URL? {
-        URL(string: self)
-    }
+    public var asURL: URL? { URL(string: self) }
 }
 
-/// Extends `URL` to conform to `URLConvertible`.
-///
-/// This implementation returns the `URL` itself through the `asURL` property, as it is already of type `URL`.
 extension URL: URLConvertible {
-    
-    /// Returns the URL itself.
-    ///
-    /// - Returns: The `URL` itself.
-    public var asURL: URL? {
-        self
-    }
+    public var asURL: URL? { self }
 }
 
+extension Optional: URLConvertible where Wrapped == URL {
+    public var asURL: URL? { self }
+}
