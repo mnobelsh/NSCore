@@ -20,6 +20,25 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
 
     // MARK: - GET
+    func test_getFromInvalidURL_deliversInvalidURLError() {
+        let requestedURLString = "any com"
+        let exp = expectation(description: "Waiting for request observer.")
+        
+        makeSUT().get(from: requestedURLString) { result in
+            switch result {
+            case let .failure(error):
+                XCTAssertEqual(error, .invalidURL, "Expected to receive invalid url error, got \(result) instead.")
+            default:
+                break
+            }
+            exp.fulfill()
+        }
+        
+        URLProtocolSpy.stub(data: anyData(), response: anyHTTPURLResponse(), error: nil)
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
     func test_getURLString_performsRequestWithMatchingURL() {
         let requestedURLString = "any-url-string.com"
         let exp = expectation(description: "Waiting for request observer.")
