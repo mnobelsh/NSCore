@@ -12,6 +12,7 @@
 /// invalid responses, client errors, server errors, and unknown errors.
 public enum HTTPClientError: Swift.Error, Equatable {
     
+    /// The URL provided was invalid.
     case invalidURL
     
     /// The data returned from the server was invalid or corrupted.

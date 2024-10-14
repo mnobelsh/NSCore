@@ -22,19 +22,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         headers: HTTPClient.Headers? = nil,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: .GET, queryParams: parameters, headers: headers) else {
-            completion(.failure(.invalidURL))
-            return nil
-        }
-        let task = session.dataTask(with: request) { data, response, error in
-            completion(URLSessionHTTPClient.mapResult(
-                data: data,
-                response: response,
-                error: error)
-            )
-        }
-        task.resume()
-        return task
+        return request(url: url, method: .GET, parameters: parameters, headers: headers, body: nil, completion: completion)
     }
     
     @discardableResult
@@ -45,19 +33,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         headers: HTTPClient.Headers? = nil,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: .POST, queryParams: parameters, headers: headers, body: data) else {
-            completion(.failure(.invalidURL))
-            return nil
-        }
-        let task = session.dataTask(with: request) { data, response, error in
-            completion(URLSessionHTTPClient.mapResult(
-                data: data,
-                response: response,
-                error: error)
-            )
-        }
-        task.resume()
-        return task
+        return request(url: url, method: .POST, parameters: parameters, headers: headers, body: data, completion: completion)
     }
     
     @discardableResult
@@ -68,19 +44,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         headers: HTTPClient.Headers? = nil,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: .PUT, queryParams: parameters, headers: headers, body: data) else {
-            completion(.failure(.invalidURL))
-            return nil
-        }
-        let task = session.dataTask(with: request) { data, response, error in
-            completion(URLSessionHTTPClient.mapResult(
-                data: data,
-                response: response,
-                error: error)
-            )
-        }
-        task.resume()
-        return task
+        return request(url: url, method: .PUT, parameters: parameters, headers: headers, body: data, completion: completion)
     }
     
     @discardableResult
@@ -91,19 +55,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         headers: HTTPClient.Headers? = nil,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: .PATCH, queryParams: parameters, headers: headers, body: data) else {
-            completion(.failure(.invalidURL))
-            return nil
-        }
-        let task = session.dataTask(with: request) { data, response, error in
-            completion(URLSessionHTTPClient.mapResult(
-                data: data,
-                response: response,
-                error: error)
-            )
-        }
-        task.resume()
-        return task
+        return request(url: url, method: .PATCH, parameters: parameters, headers: headers, body: data, completion: completion)
     }
     
     @discardableResult
@@ -113,7 +65,23 @@ public final class URLSessionHTTPClient: HTTPClient {
         headers: HTTPClient.Headers? = nil,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: .DELETE, queryParams: parameters, headers: headers) else {
+        return request(url: url, method: .DELETE, parameters: parameters, headers: headers, body: nil, completion: completion)
+    }
+    
+}
+
+// MARK: - URLSessionHTTPClient + Extensions (Private)
+private extension URLSessionHTTPClient {
+    
+    func request(
+        url: URLConvertible,
+        method: HTTPMethod,
+        parameters: HTTPClient.QueryParameters?,
+        headers: HTTPClient.Headers?,
+        body: Data?,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: method, queryParams: parameters, headers: headers) else {
             completion(.failure(.invalidURL))
             return nil
         }
@@ -127,11 +95,6 @@ public final class URLSessionHTTPClient: HTTPClient {
         task.resume()
         return task
     }
-    
-}
-
-// MARK: - URLSessionHTTPClient + Extensions (Private)
-private extension URLSessionHTTPClient {
     
     func buildRequest(
         url: URLConvertible,
