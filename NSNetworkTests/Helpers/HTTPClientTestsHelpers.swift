@@ -8,6 +8,16 @@
 
 import Foundation
 
+func anyHTTPBody() -> Data {
+    let dict: [String: Any?] = [
+        "id": 1,
+        "name": "James",
+        "address": nil,
+        "height": 170.5
+    ]
+    return try! JSONSerialization.data(withJSONObject: dict)
+}
+
 func anyURL() -> URL {
     URL(string: "any-url")!
 }
