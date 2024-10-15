@@ -16,11 +16,113 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
-    public func get(from url: URL, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask {
-        let request = buildRequest(url: url, method: .GET)
+    public func get(
+        from url: URLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: .GET, queryParams: parameters, headers: headers) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
         let task = session.dataTask(with: request) { data, response, error in
-            if let error = error { return completion(.failure(.unknown(message: error.localizedDescription))) }
-            completion(URLSessionHTTPClient.mapResult(data: data, response: response))
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
+    public func post(
+        _ data: Data,
+        to url: URLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: .POST, queryParams: parameters, headers: headers, body: data) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
+    public func put(
+        _ data: Data,
+        to url: URLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: .PUT, queryParams: parameters, headers: headers, body: data) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
+    public func patch(
+        _ data: Data,
+        to url: URLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: .PATCH, queryParams: parameters, headers: headers, body: data) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
+        }
+        task.resume()
+        return task
+    }
+    
+    @discardableResult
+    public func delete(
+        from url: URLConvertible,
+        parameters: HTTPClient.QueryParameters? = nil,
+        headers: HTTPClient.Headers? = nil,
+        completion: @escaping (HTTPClient.Result) -> Void
+    ) -> HTTPClientTask? {
+        guard let request = buildRequest(url: url, method: .DELETE, queryParams: parameters, headers: headers) else {
+            completion(.failure(.invalidURL))
+            return nil
+        }
+        let task = session.dataTask(with: request) { data, response, error in
+            completion(URLSessionHTTPClient.mapResult(
+                data: data,
+                response: response,
+                error: error)
+            )
         }
         task.resume()
         return task
@@ -28,15 +130,38 @@ public final class URLSessionHTTPClient: HTTPClient {
     
 }
 
-extension URLSessionHTTPClient {
+// MARK: - URLSessionHTTPClient + Extensions (Private)
+private extension URLSessionHTTPClient {
     
-    private func buildRequest(url: URL, method: HTTPMethod) -> URLRequest {
+    func buildRequest(
+        url: URLConvertible,
+        method: HTTPMethod,
+        queryParams: QueryParameters? = nil,
+        headers: [String: Any?]? = nil,
+        body: Data? = nil
+    ) -> URLRequest? {
+        guard var url = url.asURL else { return nil }
+        if let queryParams = queryParams {
+            var queryItems = [URLQueryItem]()
+            for (key, value) in queryParams where value != nil {
+                let item = URLQueryItem(name: key, value: String(describing: value!))
+                queryItems.append(item)
+            }
+            url.append(queryItems: queryItems)
+        }
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
+        request.httpBody = body
+        if let headers = headers, !headers.isEmpty {
+            for (key, value) in headers where value != nil {
+                request.setValue(String(describing: value!), forHTTPHeaderField: key)
+            }
+        }
         return request
     }
     
-    static func mapResult(data: Data?, response: URLResponse?) -> HTTPClient.Result {
+    static func mapResult(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result {
+        if let error = error { return .failure(.unknown(message: error.localizedDescription)) }
         guard let response = response as? HTTPURLResponse else { return .failure(.invalidResponse) }
         let emptyData = Data()
         switch response.statusCode {
@@ -45,24 +170,8 @@ extension URLSessionHTTPClient {
         case 500...599:
             return .failure(.server(data: data == emptyData ? nil : data, code: response.statusCode))
         default:
-            if let data = data, data != emptyData {
-                return .success(data)
-            } else {
-                return .failure(.invalidData)
-            }
+            return .success(data)
         }
     }
     
-}
-
-extension URLSessionDataTask: HTTPClientTask {
-    public var id: String { UUID().uuidString }
-    
-    public func cancelTask() {
-        self.cancel()
-    }
-    
-    public func resumeTask() {
-        self.resume()
-    }
 }

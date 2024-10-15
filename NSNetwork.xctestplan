@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "ADC0AFA4-21B0-4838-91F0-DCE63BF8D36A",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:NSCore.xcodeproj",
+        "identifier" : "FFF340EC2CB85D1400861215",
+        "name" : "NSNetworkTests"
+      }
+    }
+  ],
+  "version" : 1
+}
