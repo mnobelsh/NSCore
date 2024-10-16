@@ -21,19 +21,36 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     // MARK: - GET
     func test_getFromInvalidURL_deliversInvalidURLError() {
-        let invalidURL = "any com"
         let exp = expectation(description: "Waiting for request observer.")
         
-        makeSUT().get(from: invalidURL) { result in
+        makeSUT().get(from: "") { result in
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .invalidURL, "Expected to receive invalid url error, got \(result) instead.")
             default:
-                break
+                XCTFail("Expected to receive invalid url error, got \(result) instead.")
             }
             exp.fulfill()
         }
         
+        URLProtocolSpy.stub(data: anyData(), response: anyHTTPURLResponse(), error: nil)
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func test_getAsyncFromInvalidURL_deliversInvalidURLError() {
+        let exp = expectation(description: "Waiting for get request.")
+        
+        Task {
+            do {
+                let data = try await makeSUT().get(from: "")
+                XCTFail("Expected to receive invalid url error, got \(data!) instead.")
+            } catch let error as HTTPError {
+                XCTAssertEqual(error, .invalidURL)
+            }
+            exp.fulfill()
+        }
+       
         URLProtocolSpy.stub(data: anyData(), response: anyHTTPURLResponse(), error: nil)
         
         wait(for: [exp], timeout: 1)
@@ -60,6 +77,20 @@ final class URLSessionHTTPClientTests: XCTestCase {
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url, anyURL())
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func test_getOptionalURL_performsRequestWithMatchingURL() {
+        let exp = expectation(description: "Waiting for request observer.")
+        let optionalURL = URL(string: "any-optional-url")
+        
+        makeSUT().get(from: optionalURL) { _ in }
+        
+        URLProtocolSpy.observeRequest { request in
+            XCTAssertEqual(request.url, optionalURL)
             exp.fulfill()
         }
         
@@ -104,6 +135,25 @@ final class URLSessionHTTPClientTests: XCTestCase {
         }
     }
     
+    func test_getAsync_deliversSuccessDataOnHTTPURLResponse() {
+        let exp = expectation(description: "Waiting for get request.")
+        let expectedData = anyData()
+        
+        Task {
+            do {
+                let data = try await makeSUT().get(from: anyURL())
+                XCTAssertEqual(data, expectedData)
+            } catch let error as HTTPError {
+                XCTFail("Expected to receive \(expectedData), got \(error) instead.")
+            }
+            exp.fulfill()
+        }
+       
+        URLProtocolSpy.stub(data: expectedData, response: anyHTTPURLResponse(), error: nil)
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
     func test_get_deliversClientErrorOnAllClientErrorStatusCodes() {
         let clientErrorStatusCodes: [Int] = Array(400...451)
         clientErrorStatusCodes.forEach { code in
@@ -117,6 +167,33 @@ final class URLSessionHTTPClientTests: XCTestCase {
         }
     }
     
+    func test_getAsync_deliversClientErrorOnAllClientErrorStatusCodes() {
+        let clientErrorStatusCodes: [Int] = Array(400...404)
+        clientErrorStatusCodes.forEach { code in
+            
+            let exp = expectation(description: "Waiting for get request.")
+            
+            Task {
+                do {
+                    let data = try await makeSUT().get(from: anyURL())
+                    XCTFail("Expected to receive client error with code: \(code), got \(data!) instead.")
+                } catch let error as HTTPError {
+                    switch error {
+                    case .client:
+                        XCTAssertEqual(error, .client(data: nil, code: code))
+                    default:
+                        XCTFail("Expected to receive client error with code: \(code), got \(error) instead.")
+                    }
+                }
+                exp.fulfill()
+            }
+           
+            URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
+            
+            wait(for: [exp], timeout: 1.0)
+        }
+    }
+    
     func test_get_deliversServerErrorOnAllServerErrorStatusCodes() {
         let serverErrorStatusCodes: [Int] = Array(500...512)
         serverErrorStatusCodes.forEach { code in
@@ -127,6 +204,33 @@ final class URLSessionHTTPClientTests: XCTestCase {
             default:
                 XCTFail("Expected to receive client error, got \(result!) instead.")
             }
+        }
+    }
+    
+    func test_getAsync_deliversServerErrorOnAllServerErrorStatusCodes() {
+        let clientErrorStatusCodes: [Int] = Array(500...512)
+        clientErrorStatusCodes.forEach { code in
+            
+            let exp = expectation(description: "Waiting for get request.")
+            
+            Task {
+                do {
+                    let data = try await makeSUT().get(from: anyURL())
+                    XCTFail("Expected to receive server error with code: \(code), got \(data!) instead.")
+                } catch let error as HTTPError {
+                    switch error {
+                    case .server:
+                        XCTAssertEqual(error, .server(data: nil, code: code))
+                    default:
+                        XCTFail("Expected to receive server error with code: \(code), got \(error) instead.")
+                    }
+                }
+                exp.fulfill()
+            }
+           
+            URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
+            
+            wait(for: [exp], timeout: 1.0)
         }
     }
     
@@ -247,7 +351,7 @@ private extension URLSessionHTTPClientTests {
         return receivedValue
     }
     
-    func resultErrorFor(_ result: URLSessionHTTPClient.Result?) -> HTTPClientError? {
+    func resultErrorFor(_ result: URLSessionHTTPClient.Result?) -> HTTPError? {
         return switch result {
         case let .failure(error): error
         default: nil

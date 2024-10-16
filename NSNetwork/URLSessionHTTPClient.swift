@@ -25,6 +25,14 @@ public final class URLSessionHTTPClient: HTTPClient {
         return request(url: url, method: .GET, parameters: parameters, headers: headers, body: nil, completion: completion)
     }
     
+    public func get(
+        from url: URLConvertible,
+        parameters: QueryParameters?,
+        headers: Headers?
+    ) async throws -> Data? {
+        return try await asyncRequest(url: url, method: .GET, parameters: parameters, headers: headers, body: nil)
+    }
+    
     @discardableResult
     public func post(
         _ data: Data,
@@ -72,6 +80,30 @@ public final class URLSessionHTTPClient: HTTPClient {
 
 // MARK: - URLSessionHTTPClient + Extensions (Private)
 private extension URLSessionHTTPClient {
+    
+    func asyncRequest(
+        url: URLConvertible,
+        method: HTTPMethod,
+        parameters: HTTPClient.QueryParameters?,
+        headers: HTTPClient.Headers?,
+        body: Data?
+    ) async throws -> Data? {
+        guard let request = buildRequest(url: url, method: .GET, queryParams: parameters, headers: headers, body: nil) else {
+            throw HTTPError.invalidURL
+        }
+        do {
+            let response = try await session.data(for: request)
+            switch URLSessionHTTPClient.mapResult(data: response.0, response: response.1, error: nil) {
+            case let .success(data): return data
+            case let .failure(error): throw error
+            }
+        } catch {
+            guard let httpError = error as? HTTPError else {
+                throw HTTPError.unknown(message: error.localizedDescription)
+            }
+            throw httpError
+        }
+    }
     
     func request(
         url: URLConvertible,
@@ -125,13 +157,13 @@ private extension URLSessionHTTPClient {
     
     static func mapResult(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result {
         if let error = error { return .failure(.unknown(message: error.localizedDescription)) }
-        guard let response = response as? HTTPURLResponse else { return .failure(.invalidResponse) }
+        guard let response = response as? HTTPURLResponse else { return .failure(HTTPError.invalidResponse) }
         let emptyData = Data()
         switch response.statusCode {
         case 400...499:
-            return .failure(.client(data: data == emptyData ? nil : data, code: response.statusCode))
+            return .failure(HTTPError.client(data: data == emptyData ? nil : data, code: response.statusCode))
         case 500...599:
-            return .failure(.server(data: data == emptyData ? nil : data, code: response.statusCode))
+            return .failure(HTTPError.server(data: data == emptyData ? nil : data, code: response.statusCode))
         default:
             return .success(data)
         }

@@ -1,5 +1,5 @@
 //
-//  HTTPClientError.swift
+//  HTTPError.swift
 //  NSCore
 //
 //  Created by Muhammad Nobel Shidqi on 12/10/24.
@@ -8,9 +8,9 @@
 
 /// An error type that represents various failures that can occur when making HTTP requests.
 ///
-/// The `HTTPClientError` enum defines specific cases for different types of errors such as invalid data,
+/// The `HTTPError` enum defines specific cases for different types of errors such as invalid data,
 /// invalid responses, client errors, server errors, and unknown errors.
-public enum HTTPClientError: Swift.Error, Equatable {
+public enum HTTPError: Swift.Error, Equatable {
     
     /// The URL provided was invalid.
     case invalidURL

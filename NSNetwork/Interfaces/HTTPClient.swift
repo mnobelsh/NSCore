@@ -18,13 +18,15 @@ public protocol HTTPClient: AnyObject {
     ///
     /// - success: The request was successful, and the associated value contains the data returned by the server.
     /// - failure: The request failed, and the associated value contains the error.
-    typealias Result = Swift.Result<Data?, HTTPClientError>
+    typealias Result = Swift.Result<Data?, HTTPError>
     
     /// A type alias that represents HTTP headers as a dictionary of key-value pairs.
     typealias Headers = [String: Any?]
     
     /// A type alias that represents query parameters as a dictionary of key-value pairs.
     typealias QueryParameters = [String: Any?]
+    
+    // MARK: - Closure Methods
     
     /// Sends an asynchronous `GET` request to the specified URL.
     ///
@@ -95,11 +97,18 @@ public protocol HTTPClient: AnyObject {
     /// - Returns: A task that allows for cancellation or monitoring of the ongoing request.
     @discardableResult
     func delete(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    
+    
+    // MARK: - Async Methods
+    
+    func get(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?) async throws -> Data?
 }
 
 
 // MARK: - HTTPClient + Extensions (Use default parameters value)
 public extension HTTPClient {
+    
+    // MARK: - Closure Default Implementation
     
     @discardableResult
     func get(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
@@ -124,6 +133,12 @@ public extension HTTPClient {
     @discardableResult
     func delete(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
         return delete(from: url, parameters: parameters, headers: headers, completion: completion)
+    }
+    
+    // MARK: - Async Default Implementation
+    
+    func get(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil) async throws -> Data? {
+        return try await get(from: url, parameters: parameters, headers: headers)
     }
     
 }
