@@ -126,7 +126,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     
     func test_get_deliversSuccessDataOnHTTPURLResponse() {
         let expectedData: Data? = nil
-        let result = resultValueFor(data: expectedData, response: anyHTTPURLResponse(), error: nil)
+        let result = resultValueGetRequestWith(data: expectedData, response: anyHTTPURLResponse(), error: nil)
         switch result {
         case .failure:
             XCTFail("Expected to receive success result, got \(result!) instead.")
@@ -136,28 +136,18 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getAsync_deliversSuccessDataOnHTTPURLResponse() {
-        let exp = expectation(description: "Waiting for get request.")
         let expectedData = anyData()
         
-        Task {
-            do {
-                let data = try await makeSUT().get(from: anyURL())
-                XCTAssertEqual(data, expectedData)
-            } catch let error as HTTPError {
-                XCTFail("Expected to receive \(expectedData), got \(error) instead.")
-            }
-            exp.fulfill()
-        }
-       
-        URLProtocolSpy.stub(data: expectedData, response: anyHTTPURLResponse(), error: nil)
-        
-        wait(for: [exp], timeout: 1)
+        assertThatGetAsync(
+            withResponse: (data: expectedData, response: anyHTTPURLResponse(), error: nil),
+            resulting: .success(expectedData)
+        )
     }
     
     func test_get_deliversClientErrorOnAllClientErrorStatusCodes() {
         let clientErrorStatusCodes: [Int] = Array(400...451)
         clientErrorStatusCodes.forEach { code in
-            let result = resultValueFor(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
+            let result = resultValueGetRequestWith(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .client(data: nil, code: code))
@@ -170,34 +160,17 @@ final class URLSessionHTTPClientTests: XCTestCase {
     func test_getAsync_deliversClientErrorOnAllClientErrorStatusCodes() {
         let clientErrorStatusCodes: [Int] = Array(400...404)
         clientErrorStatusCodes.forEach { code in
-            
-            let exp = expectation(description: "Waiting for get request.")
-            
-            Task {
-                do {
-                    let data = try await makeSUT().get(from: anyURL())
-                    XCTFail("Expected to receive client error with code: \(code), got \(data!) instead.")
-                } catch let error as HTTPError {
-                    switch error {
-                    case .client:
-                        XCTAssertEqual(error, .client(data: nil, code: code))
-                    default:
-                        XCTFail("Expected to receive client error with code: \(code), got \(error) instead.")
-                    }
-                }
-                exp.fulfill()
-            }
-           
-            URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
-            
-            wait(for: [exp], timeout: 1.0)
+            assertThatGetAsync(
+                withResponse: (data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil),
+                resulting: .failure(.client(data: nil, code: code))
+            )
         }
     }
     
     func test_get_deliversServerErrorOnAllServerErrorStatusCodes() {
         let serverErrorStatusCodes: [Int] = Array(500...512)
         serverErrorStatusCodes.forEach { code in
-            let result = resultValueFor(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
+            let result = resultValueGetRequestWith(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .server(data: nil, code: code))
@@ -210,37 +183,26 @@ final class URLSessionHTTPClientTests: XCTestCase {
     func test_getAsync_deliversServerErrorOnAllServerErrorStatusCodes() {
         let clientErrorStatusCodes: [Int] = Array(500...512)
         clientErrorStatusCodes.forEach { code in
-            
-            let exp = expectation(description: "Waiting for get request.")
-            
-            Task {
-                do {
-                    let data = try await makeSUT().get(from: anyURL())
-                    XCTFail("Expected to receive server error with code: \(code), got \(data!) instead.")
-                } catch let error as HTTPError {
-                    switch error {
-                    case .server:
-                        XCTAssertEqual(error, .server(data: nil, code: code))
-                    default:
-                        XCTFail("Expected to receive server error with code: \(code), got \(error) instead.")
-                    }
-                }
-                exp.fulfill()
-            }
-           
-            URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil)
-            
-            wait(for: [exp], timeout: 1.0)
+            assertThatGetAsync(
+                withResponse: (data: nil, response: anyHTTPURLResponse(statusCode: code), error: nil),
+                resulting: .failure(.server(data: nil, code: code))
+            )
         }
     }
     
     func test_get_deliversErrorOnAllInvalidRequests() {
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: nil, response: nil, error: nil)))
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: anyData(), response: nil, error: nil)))
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: anyData(), response: nil, error: anyError())))
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: nil, response: anyURLResponse(), error: nil)))
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: anyData(), response: anyURLResponse(), error: nil)))
-        XCTAssertNotNil(resultErrorFor(resultValueFor(data: nil, response: anyURLResponse(), error: anyError())))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: nil, response: nil, error: nil)))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: anyData(), response: nil, error: nil)))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: anyData(), response: nil, error: anyError())))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: nil, response: anyURLResponse(), error: nil)))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: anyData(), response: anyURLResponse(), error: nil)))
+        XCTAssertNotNil(resultErrorFor(resultValueGetRequestWith(data: nil, response: anyURLResponse(), error: anyError())))
+    }
+    
+    func test_getAsync_deliversErrorOnAllInvalidRequests() {
+        assertThatGetAsync(withResponse: (data: nil, response: anyURLResponse(), error: anyError()), resulting: .failure(.unknown(message: anyError().localizedDescription)))
+        assertThatGetAsync(withResponse: (data: anyData(), response: anyURLResponse(), error: nil), resulting: .failure(.invalidResponse))
+        assertThatGetAsync(withResponse: (data: nil, response: anyURLResponse(), error: nil), resulting: .failure(.invalidResponse))
     }
     
     // MARK: - POST
@@ -336,7 +298,7 @@ private extension URLSessionHTTPClientTests {
         wait(for: [exp], timeout: 1.0)
     }
     
-    func resultValueFor(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result? {
+    func resultValueGetRequestWith(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result? {
         var receivedValue: HTTPClient.Result?
         
         let exp = expectation(description: "Waiting for get request.")
@@ -349,6 +311,39 @@ private extension URLSessionHTTPClientTests {
         
         wait(for: [exp], timeout: 1.0)
         return receivedValue
+    }
+    
+    func assertThatGetAsync(
+        withResponse response: (data: Data?, response: URLResponse?, error: Error?),
+        resulting result: HTTPClient.Result,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let exp = expectation(description: "Waiting for get request.")
+        
+        Task {
+            do {
+                let data = try await makeSUT().get(from: anyURL())
+                switch result {
+                case let .success(expectedData):
+                    XCTAssertEqual(expectedData, data, file: file, line: line)
+                case .failure:
+                    XCTFail("Expected to receive \(result), got \(data!) instead.", file: file, line: line)
+                }
+            } catch let error as HTTPError {
+                switch result {
+                case let .failure(expectedError):
+                    XCTAssertEqual(expectedError, error, file: file, line: line)
+                default:
+                    XCTFail("Expected to receive \(result), got \(error) instead.", file: file, line: line)
+                }
+            }
+            exp.fulfill()
+        }
+        
+        URLProtocolSpy.stub(data: response.data, response: response.response, error: response.error)
+        
+        wait(for: [exp], timeout: 1.0)
     }
     
     func resultErrorFor(_ result: URLSessionHTTPClient.Result?) -> HTTPError? {
