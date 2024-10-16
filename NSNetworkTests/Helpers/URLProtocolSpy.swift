@@ -24,9 +24,9 @@ class URLProtocolSpy: URLProtocol {
     }
     
     static func stopInterceptingRequest() {
-        URLProtocol.unregisterClass(self)
         stub = nil
         requestObserver = nil
+        URLProtocol.unregisterClass(self)
     }
     
     static func stub(data: Data?, response: URLResponse?, error: Error?) {

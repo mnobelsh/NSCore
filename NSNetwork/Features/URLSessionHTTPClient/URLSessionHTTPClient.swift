@@ -11,7 +11,7 @@ public final class URLSessionHTTPClient: HTTPClient {
     
     private let session: URLSession
     
-    public init(session: URLSession) {
+    public init(session: URLSession = .shared) {
         self.session = session
     }
     
@@ -117,7 +117,8 @@ private extension URLSessionHTTPClient {
             completion(.failure(.invalidURL))
             return nil
         }
-        let task = session.dataTask(with: request) { data, response, error in
+        let task = session.dataTask(with: request) { [weak self] data, response, error in
+            guard self != nil else { return }
             completion(URLSessionHTTPClient.mapResult(
                 data: data,
                 response: response,
@@ -125,7 +126,7 @@ private extension URLSessionHTTPClient {
             )
         }
         task.resume()
-        return task
+        return Task(wrapped: task)
     }
     
     func buildRequest(

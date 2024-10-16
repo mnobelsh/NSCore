@@ -21,9 +21,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
 
     // MARK: - GET
     func test_getFromInvalidURL_deliversInvalidURLError() {
+        let sut = makeSUT()
         let exp = expectation(description: "Waiting for request observer.")
         
-        makeSUT().get(from: "") { result in
+        sut.get(from: "") { result in
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .invalidURL, "Expected to receive invalid url error, got \(result) instead.")
@@ -44,7 +45,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         Task {
             do {
                 let data = try await makeSUT().get(from: "")
-                XCTFail("Expected to receive invalid url error, got \(data!) instead.")
+                XCTFail("Expected to receive invalid url error, got \(data) instead.")
             } catch let error as HTTPError {
                 XCTAssertEqual(error, .invalidURL)
             }
@@ -57,10 +58,11 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getURLString_performsRequestWithMatchingURL() {
+        let sut = makeSUT()
         let requestedURLString = "any-url-string.com"
         let exp = expectation(description: "Waiting for request observer.")
         
-        makeSUT().get(from: requestedURLString) { _ in }
+        sut.get(from: requestedURLString) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url?.absoluteString, requestedURLString)
@@ -71,9 +73,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getURL_performsRequestWithMatchingURL() {
+        let sut = makeSUT()
         let exp = expectation(description: "Waiting for request observer.")
         
-        makeSUT().get(from: anyURL()) { _ in }
+        sut.get(from: anyURL()) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url, anyURL())
@@ -129,7 +132,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let result = resultValueGetRequestWith(data: expectedData, response: anyHTTPURLResponse(), error: nil)
         switch result {
         case .failure:
-            XCTFail("Expected to receive success result, got \(result!) instead.")
+            XCTFail("Expected to receive success result, got \(result) instead.")
         default:
             break
         }
@@ -152,7 +155,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
             case let .failure(error):
                 XCTAssertEqual(error, .client(data: nil, code: code))
             default:
-                XCTFail("Expected to receive client error, got \(result!) instead.")
+                XCTFail("Expected to receive client error, got \(result) instead.")
             }
         }
     }
@@ -175,7 +178,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
             case let .failure(error):
                 XCTAssertEqual(error, .server(data: nil, code: code))
             default:
-                XCTFail("Expected to receive client error, got \(result!) instead.")
+                XCTFail("Expected to receive client error, got \(result) instead.")
             }
         }
     }
@@ -205,6 +208,17 @@ final class URLSessionHTTPClientTests: XCTestCase {
         assertThatGetAsync(withResponse: (data: nil, response: anyURLResponse(), error: nil), resulting: .failure(.invalidResponse))
     }
     
+    func test_get_doesNotDeliversAnyResultAfterCancelingRequest() {
+        let task = makeSUT().get(from: anyURL()) { _ in
+            XCTFail("Expected not to receive any result after canceling request.")
+        }
+        
+        XCTAssertNotNil(task?.id)
+        task?.cancel()
+        
+        URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: nil)
+    }
+    
     // MARK: - POST
     func test_post_performsRequestWithHTTPMethodPOST() {
         let sut = makeSUT()
@@ -214,10 +228,11 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_postWithBody_deliversSuccessOnHTTPURLResponse() {
+        let sut = makeSUT()
         let data = anyHTTPBody()
         let exp = expectation(description: "Waiting for post request.")
         
-        makeSUT().post(data, to: anyURL()) { result in
+        sut.post(data, to: anyURL()) { result in
             switch result {
             case .success:
                 break
@@ -233,9 +248,10 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_postWithEmptyBody_deliversFailureOnHTTPURLResponse() {
+        let sut = makeSUT()
         let exp = expectation(description: "Waiting for post request.")
         
-        makeSUT().post(Data(), to: anyURL()) { result in
+        sut.post(Data(), to: anyURL()) { result in
             switch result {
             case .failure:
                 break
@@ -280,7 +296,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
 private extension URLSessionHTTPClientTests {
     
     func makeSUT(file: StaticString = #filePath, line: UInt = #line) -> HTTPClient {
-        let sut = URLSessionHTTPClient(session: .shared)
+        let sut = URLSessionHTTPClient()
         trackForMemoryLeaks(in: sut, file: file, line: line)
         return sut
     }
@@ -298,11 +314,12 @@ private extension URLSessionHTTPClientTests {
         wait(for: [exp], timeout: 1.0)
     }
     
-    func resultValueGetRequestWith(data: Data?, response: URLResponse?, error: Error?) -> HTTPClient.Result? {
+    func resultValueGetRequestWith(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #filePath, line: UInt = #line) -> HTTPClient.Result? {
         var receivedValue: HTTPClient.Result?
-        
+        let sut = makeSUT(file: file, line: line)
         let exp = expectation(description: "Waiting for get request.")
-        makeSUT().get(from: anyURL()) { result in
+        
+        sut.get(from: anyURL()) { result in
             receivedValue = result
             exp.fulfill()
         }
@@ -328,7 +345,7 @@ private extension URLSessionHTTPClientTests {
                 case let .success(expectedData):
                     XCTAssertEqual(expectedData, data, file: file, line: line)
                 case .failure:
-                    XCTFail("Expected to receive \(result), got \(data!) instead.", file: file, line: line)
+                    XCTFail("Expected to receive \(result), got \(data) instead.", file: file, line: line)
                 }
             } catch let error as HTTPError {
                 switch result {
