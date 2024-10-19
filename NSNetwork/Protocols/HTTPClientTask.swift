@@ -18,10 +18,5 @@ public protocol HTTPClientTask {
     /// Cancels the task if it is currently running.
     ///
     /// The task will attempt to stop any ongoing work, such as a network request, and prevent further results from being delivered.
-    func cancelTask()
-    
-    /// Resumes the task if it has been suspended.
-    ///
-    /// A suspended task can be resumed to continue or start its work.
-    func resumeTask()
+    func cancel()
 }
