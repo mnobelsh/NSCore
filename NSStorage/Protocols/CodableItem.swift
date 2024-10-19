@@ -1,0 +1,10 @@
+//
+//  CodableItem.swift
+//  NSCore
+//
+//  Created by Muhammad Nobel Shidqi on 19/10/24.
+//  Copyright © 2024 Muhammad Nobel Shidqi. All rights reserved.
+//
+import Foundation
+
+public protocol CodableItem: Codable {}

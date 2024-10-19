@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "6158AB7B-7210-4BF2-B621-7A74FA5E97BF",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:NSCore.xcodeproj",
+        "identifier" : "FFF341072CB85D3C00861215",
+        "name" : "NSStorageTests"
+      }
+    }
+  ],
+  "version" : 1
+}
