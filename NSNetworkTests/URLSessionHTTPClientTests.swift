@@ -24,7 +24,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let exp = expectation(description: "Waiting for request observer.")
         
-        sut.get(from: "") { result in
+        sut.request(from: "", method: .GET) { result in
             switch result {
             case let .failure(error):
                 XCTAssertEqual(error, .invalidURL, "Expected to receive invalid url error, got \(result) instead.")
@@ -44,7 +44,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         
         Task {
             do {
-                let data = try await makeSUT().get(from: "")
+                let data = try await makeSUT().request(from: "", method: .GET)
                 XCTFail("Expected to receive invalid url error, got \(data) instead.")
             } catch let error as HTTPError {
                 XCTAssertEqual(error, .invalidURL)
@@ -62,7 +62,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let requestedURLString = "any-url-string.com"
         let exp = expectation(description: "Waiting for request observer.")
         
-        sut.get(from: requestedURLString) { _ in }
+        sut.request(from: requestedURLString, method: .GET) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url?.absoluteString, requestedURLString)
@@ -76,7 +76,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let exp = expectation(description: "Waiting for request observer.")
         
-        sut.get(from: anyURL()) { _ in }
+        sut.request(from: anyURL(), method: .GET) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url, anyURL())
@@ -90,7 +90,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let exp = expectation(description: "Waiting for request observer.")
         let optionalURL = URL(string: "any-optional-url")
         
-        makeSUT().get(from: optionalURL) { _ in }
+        makeSUT().request(from: optionalURL, method: .GET) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertEqual(request.url, optionalURL)
@@ -103,7 +103,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     func test_get_performsRequestWithHTTPMethodGET() {
         let sut = makeSUT()
         expectTo(requestWith: (method: .GET, headers: [:]), when: {
-            sut.get(from: anyURL()) { _ in }
+            sut.request(from: anyURL(), method: .GET) { _ in }
         })
     }
     
@@ -114,7 +114,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         
         let exp = expectation(description: "Waiting for request observer.")
         
-        sut.get(from: anyURL(), parameters: queryParams, headers: headers) { _ in }
+        sut.request(from: anyURL(), method: .GET, parameters: queryParams, headers: headers) { _ in }
         
         URLProtocolSpy.observeRequest { request in
             XCTAssertNotNil(request.url?.query())
@@ -209,7 +209,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_get_doesNotDeliversAnyResultAfterCancelingRequest() {
-        let task = makeSUT().get(from: anyURL()) { _ in
+        let task = makeSUT().request(from: anyURL(), method: .GET) { _ in
             XCTFail("Expected not to receive any result after canceling request.")
         }
         
@@ -224,7 +224,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let data = anyData()
         expectTo(requestWith: (method: .POST, headers: ["username":"abc123"]), when: {
-            sut.post(data, to: anyURL(), headers: ["username":"abc123"]) { _ in }
+            sut.request(from: anyURL(), method: .POST, headers: ["username":"abc123"], body: data) { _ in }
         })
     }
     
@@ -233,7 +233,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let data = anyHTTPBody()
         let exp = expectation(description: "Waiting for post request.")
         
-        sut.post(data, to: anyURL()) { result in
+        sut.request(from: anyURL(), method: .POST, body: data) { result in
             switch result {
             case .success:
                 break
@@ -255,13 +255,12 @@ final class URLSessionHTTPClientTests: XCTestCase {
         
         Task {
             do {
-                try await sut.post(data, to: anyURL())
+                try await sut.request(from: anyURL(), method: .POST, body: data)
             } catch {
                 XCTFail("Expected to receive success, got \(error) instead.")
             }
             exp.fulfill()
         }
-        
         
         URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: nil)
         
@@ -272,7 +271,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let exp = expectation(description: "Waiting for post request.")
         
-        sut.post(Data(), to: anyURL()) { result in
+        sut.request(from: anyURL(), method: .POST, body: Data()) { result in
             switch result {
             case .failure:
                 break
@@ -292,7 +291,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let data = anyData()
         expectTo(requestWith: (method: .PUT, headers: ["id": "123"]), when: {
-            sut.put(data, to: anyURL(), headers: ["id": "123"]) { _ in }
+            sut.request(from: anyURL(), method: .PUT, headers: ["id": "123"], body: data) { _ in }
         })
     }
     
@@ -301,7 +300,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
         let sut = makeSUT()
         let data = anyData()
         expectTo(requestWith: (method: .PATCH, headers: [:]), when: {
-            sut.patch(data, to: anyURL()) { _ in }
+            sut.request(from: anyURL(), method: .PATCH, body: data) { _ in }
         })
     }
     
@@ -309,7 +308,7 @@ final class URLSessionHTTPClientTests: XCTestCase {
     func test_delete_performsRequestWithHTTPMethodDELETE() {
         let sut = makeSUT()
         expectTo(requestWith: (method: .DELETE, headers: [:]), when: {
-            sut.delete(from: anyURL()) { _ in }
+            sut.request(from: anyURL(), method: .DELETE) { _ in }
         })
     }
 
@@ -350,7 +349,7 @@ private extension URLSessionHTTPClientTests {
         let sut = makeSUT(file: file, line: line)
         let exp = expectation(description: "Waiting for get request.")
         
-        sut.get(from: anyURL()) { result in
+        sut.request(from: anyURL(), method: .GET) { result in
             receivedValue = result
             exp.fulfill()
         }
@@ -371,7 +370,7 @@ private extension URLSessionHTTPClientTests {
         
         Task {
             do {
-                let data = try await makeSUT().get(from: anyURL())
+                let data = try await makeSUT().request(from: anyURL(), method: .GET)
                 switch result {
                 case let .success(expectedData):
                     XCTAssertEqual(expectedData, data, file: file, line: line)

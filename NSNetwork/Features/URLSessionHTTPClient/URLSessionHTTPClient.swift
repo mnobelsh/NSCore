@@ -15,80 +15,26 @@ public final class URLSessionHTTPClient: HTTPClient {
         self.session = session
     }
     
-    // MARK: - GET
-    @discardableResult
-    public func get(
+    public func request(
         from url: URLConvertible,
-        parameters: HTTPClient.QueryParameters? = nil,
-        headers: HTTPClient.Headers? = nil,
-        completion: @escaping (HTTPClient.Result) -> Void
+        method: HTTPMethod,
+        parameters: QueryParameters? = nil,
+        headers: Headers? = nil,
+        body: Data? = nil,
+        completion: @escaping (Result<Data?, HTTPError>) -> Void
     ) -> HTTPClientTask? {
-        return request(url: url, method: .GET, parameters: parameters, headers: headers, body: nil, completion: completion)
+        return performRequest(url: url, method: method, parameters: parameters, headers: headers, body: body, completion: completion)
     }
     
-    public func get(
+    @discardableResult
+    public func request(
         from url: URLConvertible,
-        parameters: QueryParameters?,
-        headers: Headers?
+        method: HTTPMethod,
+        parameters: QueryParameters? = nil,
+        headers: Headers? = nil,
+        body: Data? = nil
     ) async throws -> Data? {
-        return try await asyncRequest(url: url, method: .GET, parameters: parameters, headers: headers, body: nil)
-    }
-    
-    // MARK: - POST
-    @discardableResult
-    public func post(
-        _ data: Data,
-        to url: URLConvertible,
-        parameters: HTTPClient.QueryParameters? = nil,
-        headers: HTTPClient.Headers? = nil,
-        completion: @escaping (HTTPClient.Result) -> Void
-    ) -> HTTPClientTask? {
-        return request(url: url, method: .POST, parameters: parameters, headers: headers, body: data, completion: completion)
-    }
-    
-    @discardableResult
-    public func post(
-        _ data: Data,
-        to url: URLConvertible,
-        parameters: QueryParameters?,
-        headers: Headers?
-    ) async throws -> Data? {
-        return try await asyncRequest(url: url, method: .POST, parameters: parameters, headers: headers, body: data)
-    }
-    
-    // MARK: - PUT
-    @discardableResult
-    public func put(
-        _ data: Data,
-        to url: URLConvertible,
-        parameters: HTTPClient.QueryParameters? = nil,
-        headers: HTTPClient.Headers? = nil,
-        completion: @escaping (HTTPClient.Result) -> Void
-    ) -> HTTPClientTask? {
-        return request(url: url, method: .PUT, parameters: parameters, headers: headers, body: data, completion: completion)
-    }
-    
-    // MARK: - PATCH
-    @discardableResult
-    public func patch(
-        _ data: Data,
-        to url: URLConvertible,
-        parameters: HTTPClient.QueryParameters? = nil,
-        headers: HTTPClient.Headers? = nil,
-        completion: @escaping (HTTPClient.Result) -> Void
-    ) -> HTTPClientTask? {
-        return request(url: url, method: .PATCH, parameters: parameters, headers: headers, body: data, completion: completion)
-    }
-    
-    // MARK: - DELETE
-    @discardableResult
-    public func delete(
-        from url: URLConvertible,
-        parameters: HTTPClient.QueryParameters? = nil,
-        headers: HTTPClient.Headers? = nil,
-        completion: @escaping (HTTPClient.Result) -> Void
-    ) -> HTTPClientTask? {
-        return request(url: url, method: .DELETE, parameters: parameters, headers: headers, body: nil, completion: completion)
+        return try await performAsyncRequest(url: url, method: method, parameters: parameters, headers: headers, body: body)
     }
     
 }
@@ -96,7 +42,7 @@ public final class URLSessionHTTPClient: HTTPClient {
 // MARK: - URLSessionHTTPClient + Extensions (Private)
 private extension URLSessionHTTPClient {
     
-    func asyncRequest(
+    func performAsyncRequest(
         url: URLConvertible,
         method: HTTPMethod,
         parameters: HTTPClient.QueryParameters?,
@@ -120,7 +66,7 @@ private extension URLSessionHTTPClient {
         }
     }
     
-    func request(
+    func performRequest(
         url: URLConvertible,
         method: HTTPMethod,
         parameters: HTTPClient.QueryParameters?,
