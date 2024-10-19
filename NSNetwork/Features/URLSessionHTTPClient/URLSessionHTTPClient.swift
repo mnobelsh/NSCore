@@ -15,6 +15,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         self.session = session
     }
     
+    // MARK: - GET
     @discardableResult
     public func get(
         from url: URLConvertible,
@@ -33,6 +34,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         return try await asyncRequest(url: url, method: .GET, parameters: parameters, headers: headers, body: nil)
     }
     
+    // MARK: - POST
     @discardableResult
     public func post(
         _ data: Data,
@@ -45,6 +47,17 @@ public final class URLSessionHTTPClient: HTTPClient {
     }
     
     @discardableResult
+    public func post(
+        _ data: Data,
+        to url: URLConvertible,
+        parameters: QueryParameters?,
+        headers: Headers?
+    ) async throws -> Data? {
+        return try await asyncRequest(url: url, method: .POST, parameters: parameters, headers: headers, body: data)
+    }
+    
+    // MARK: - PUT
+    @discardableResult
     public func put(
         _ data: Data,
         to url: URLConvertible,
@@ -55,6 +68,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         return request(url: url, method: .PUT, parameters: parameters, headers: headers, body: data, completion: completion)
     }
     
+    // MARK: - PATCH
     @discardableResult
     public func patch(
         _ data: Data,
@@ -66,6 +80,7 @@ public final class URLSessionHTTPClient: HTTPClient {
         return request(url: url, method: .PATCH, parameters: parameters, headers: headers, body: data, completion: completion)
     }
     
+    // MARK: - DELETE
     @discardableResult
     public func delete(
         from url: URLConvertible,
@@ -113,7 +128,7 @@ private extension URLSessionHTTPClient {
         body: Data?,
         completion: @escaping (HTTPClient.Result) -> Void
     ) -> HTTPClientTask? {
-        guard let request = buildRequest(url: url, method: method, queryParams: parameters, headers: headers) else {
+        guard let request = buildRequest(url: url, method: method, queryParams: parameters, headers: headers, body: body) else {
             completion(.failure(.invalidURL))
             return nil
         }
@@ -139,8 +154,8 @@ private extension URLSessionHTTPClient {
         guard var url = url.asURL else { return nil }
         if let queryParams = queryParams {
             var queryItems = [URLQueryItem]()
-            for (key, value) in queryParams where value != nil {
-                let item = URLQueryItem(name: key, value: String(describing: value!))
+            for (key, value) in queryParams {
+                let item = URLQueryItem(name: key, value: String(describing: value))
                 queryItems.append(item)
             }
             url.append(queryItems: queryItems)

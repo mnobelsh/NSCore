@@ -102,15 +102,15 @@ final class URLSessionHTTPClientTests: XCTestCase {
     
     func test_get_performsRequestWithHTTPMethodGET() {
         let sut = makeSUT()
-        expectTo(requestWithMethod: .GET, when: {
+        expectTo(requestWith: (method: .GET, headers: [:]), when: {
             sut.get(from: anyURL()) { _ in }
         })
     }
     
     func test_get_performsRequestWithQueryParametersAndHeaders() {
         let sut = makeSUT()
-        let queryParams: HTTPClient.QueryParameters = ["id":1, "username": "anonymous123", "none": nil]
-        let headers: HTTPClient.Headers = ["id": 1, "name": "anonymous", "height": 170.5, "none": nil]
+        let queryParams: HTTPClient.QueryParameters = ["id":1, "username": "anonymous123"]
+        let headers: HTTPClient.Headers = ["id": 1, "name": "anonymous", "height": 170.5]
         
         let exp = expectation(description: "Waiting for request observer.")
         
@@ -222,8 +222,9 @@ final class URLSessionHTTPClientTests: XCTestCase {
     // MARK: - POST
     func test_post_performsRequestWithHTTPMethodPOST() {
         let sut = makeSUT()
-        expectTo(requestWithMethod: .POST, when: {
-            sut.post(anyData(), to: anyURL()) { _ in }
+        let data = anyData()
+        expectTo(requestWith: (method: .POST, headers: ["username":"abc123"]), when: {
+            sut.post(data, to: anyURL(), headers: ["username":"abc123"]) { _ in }
         })
     }
     
@@ -241,6 +242,26 @@ final class URLSessionHTTPClientTests: XCTestCase {
             }
             exp.fulfill()
         }
+        
+        URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: nil)
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func test_postAsyncWithBody_deliversSuccessOnHTTPURLResponse() {
+        let sut = makeSUT()
+        let data = anyHTTPBody()
+        let exp = expectation(description: "Waiting for post request.")
+        
+        Task {
+            do {
+                try await sut.post(data, to: anyURL())
+            } catch {
+                XCTFail("Expected to receive success, got \(error) instead.")
+            }
+            exp.fulfill()
+        }
+        
         
         URLProtocolSpy.stub(data: nil, response: anyHTTPURLResponse(), error: nil)
         
@@ -269,23 +290,25 @@ final class URLSessionHTTPClientTests: XCTestCase {
     // MARK: - PUT
     func test_put_performsRequestWithHTTPMethodPUT() {
         let sut = makeSUT()
-        expectTo(requestWithMethod: .PUT, when: {
-            sut.put(anyData(), to: anyURL()) { _ in }
+        let data = anyData()
+        expectTo(requestWith: (method: .PUT, headers: ["id": "123"]), when: {
+            sut.put(data, to: anyURL(), headers: ["id": "123"]) { _ in }
         })
     }
     
     // MARK: - PATCH
     func test_patch_performsRequestWithHTTPMethodPATCH() {
         let sut = makeSUT()
-        expectTo(requestWithMethod: .PATCH, when: {
-            sut.patch(anyData(), to: anyURL()) { _ in }
+        let data = anyData()
+        expectTo(requestWith: (method: .PATCH, headers: [:]), when: {
+            sut.patch(data, to: anyURL()) { _ in }
         })
     }
     
     // MARK: - DELETE
     func test_delete_performsRequestWithHTTPMethodDELETE() {
         let sut = makeSUT()
-        expectTo(requestWithMethod: .DELETE, when: {
+        expectTo(requestWith: (method: .DELETE, headers: [:]), when: {
             sut.delete(from: anyURL()) { _ in }
         })
     }
@@ -301,13 +324,21 @@ private extension URLSessionHTTPClientTests {
         return sut
     }
     
-    func expectTo(requestWithMethod method: HTTPMethod, when operation: @escaping() -> Void, file: StaticString = #filePath, line: UInt = #line) {
+    func expectTo(
+        requestWith params: (method: HTTPMethod, headers: HTTPClient.Headers),
+        when operation: @escaping() -> Void,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
         let exp = expectation(description: "Waiting for request observer.")
         
         operation()
         
         URLProtocolSpy.observeRequest { request in
-            XCTAssertEqual(request.httpMethod, method.rawValue, "Expect to perform request with \(method.rawValue), got \(request.httpMethod!) instead.", file: file, line: line)
+            XCTAssertEqual(request.httpMethod, params.method.rawValue, "Expect to perform request with method: \(params.method.rawValue), got \(String(describing: request.httpMethod)) instead.", file: file, line: line)
+            params.headers.forEach {
+                XCTAssertNotNil(request.value(forHTTPHeaderField: $0.key), "Expect to perform request with headers key: \($0.key), value: \($0.value).", file: file, line: line)
+            }
             exp.fulfill()
         }
         

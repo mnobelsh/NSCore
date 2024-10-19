@@ -23,7 +23,7 @@ func anyURL() -> URL {
 }
 
 func anyData() -> Data {
-    "Any Data".data(using: .utf8)!
+    "{\"id\": \"abc123\"}".data(using: .utf8)!
 }
 
 func anyError() -> Error {

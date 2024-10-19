@@ -21,10 +21,10 @@ public protocol HTTPClient: AnyObject {
     typealias Result = Swift.Result<Data?, HTTPError>
     
     /// A type alias that represents HTTP headers as a dictionary of key-value pairs.
-    typealias Headers = [String: Any?]
+    typealias Headers = [String: Any]
     
     /// A type alias that represents query parameters as a dictionary of key-value pairs.
-    typealias QueryParameters = [String: Any?]
+    typealias QueryParameters = [String: Any]
     
     // MARK: - Closure Methods
     
@@ -49,7 +49,7 @@ public protocol HTTPClient: AnyObject {
     /// }
     /// ```
     @discardableResult
-    func get(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    func get(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask?
     
     /// Sends an asynchronous `POST` request to the specified URL with the given data.
     ///
@@ -61,7 +61,7 @@ public protocol HTTPClient: AnyObject {
     ///   - completion: A closure to be called upon completion of the request. It receives a `Result` containing either the data or an error.
     /// - Returns: A task that allows for cancellation or monitoring of the ongoing request.
     @discardableResult
-    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask?
     
     /// Sends an asynchronous `PUT` request to the specified URL with the given data.
     ///
@@ -73,7 +73,7 @@ public protocol HTTPClient: AnyObject {
     ///   - completion: A closure to be called upon completion of the request. It receives a `Result` containing either the data or an error.
     /// - Returns: A task that allows for cancellation or monitoring of the ongoing request.
     @discardableResult
-    func put(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    func put(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask?
     
     /// Sends an asynchronous `PATCH` request to the specified URL with the given data.
     ///
@@ -85,7 +85,7 @@ public protocol HTTPClient: AnyObject {
     ///   - completion: A closure to be called upon completion of the request. It receives a `Result` containing either the data or an error.
     /// - Returns: A task that allows for cancellation or monitoring of the ongoing request.
     @discardableResult
-    func patch(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    func patch(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask?
     
     /// Sends an asynchronous `DELETE` request to the specified URL.
     ///
@@ -96,12 +96,15 @@ public protocol HTTPClient: AnyObject {
     ///   - completion: A closure to be called upon completion of the request. It receives a `Result` containing either the data or an error.
     /// - Returns: A task that allows for cancellation or monitoring of the ongoing request.
     @discardableResult
-    func delete(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (Result) -> Void) -> HTTPClientTask?
+    func delete(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask?
     
     
     // MARK: - Async Methods
     
     func get(from url: URLConvertible, parameters: QueryParameters?, headers: Headers?) async throws -> Data?
+    
+    @discardableResult
+    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters?, headers: Headers?) async throws -> Data?
 }
 
 
@@ -111,27 +114,27 @@ public extension HTTPClient {
     // MARK: - Closure Default Implementation
     
     @discardableResult
-    func get(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
+    func get(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask? {
         return get(from: url, parameters: parameters, headers: headers, completion: completion)
     }
     
     @discardableResult
-    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
+    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask? {
         return post(data, to: url, parameters: parameters, headers: headers, completion: completion)
     }
     
     @discardableResult
-    func put(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
+    func put(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask? {
         return put(data, to: url, parameters: parameters, headers: headers, completion: completion)
     }
     
     @discardableResult
-    func patch(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
+    func patch(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask? {
         return patch(data, to: url, parameters: parameters, headers: headers, completion: completion)
     }
     
     @discardableResult
-    func delete(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (Result) -> Void) -> HTTPClientTask? {
+    func delete(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil, completion: @escaping (HTTPClient.Result) -> Void) -> HTTPClientTask? {
         return delete(from: url, parameters: parameters, headers: headers, completion: completion)
     }
     
@@ -139,6 +142,11 @@ public extension HTTPClient {
     
     func get(from url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil) async throws -> Data? {
         return try await get(from: url, parameters: parameters, headers: headers)
+    }
+    
+    @discardableResult
+    func post(_ data: Data, to url: URLConvertible, parameters: QueryParameters? = nil, headers: Headers? = nil) async throws -> Data? {
+        return try await post(data, to: url, parameters: parameters, headers: headers)
     }
     
 }
